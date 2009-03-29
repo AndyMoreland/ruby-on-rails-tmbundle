@@ -28,7 +28,7 @@ class CommandGoToFile
     case TextMate.current_line
 
       # Example: render :partial => 'account/login'
-      when /render[\s\(].*:partial\s*=>\s*['"](.+?)['"]/
+      when /render[\s\(].*:partial\s*=>\s*['"@]([\w\d\/]+)['",]{0,2}/
         partial_name = $1
         modules = current_file.modules + [current_file.controller_name]
 
@@ -42,6 +42,23 @@ class CommandGoToFile
         ext = current_file.default_extension_for(:view)
         partial = File.join(current_file.rails_root, 'app', 'views', modules, "_#{partial_name}#{ext}")
         TextMate.open(partial)
+        
+      # Example: render @post
+      when /render\s*\(?@([^'"), ]+)/
+        partial_name = $1
+        modules = current_file.modules + [current_file.controller_name]
+
+        # Check for absolute path to partial
+        if partial_name.include?('/')
+          pieces = partial_name.split('/')
+          partial_name = pieces.pop
+          modules = pieces
+        end
+
+        ext = current_file.default_extension_for(:view)
+        partial = File.join(current_file.rails_root, 'app', 'views', modules, "_#{partial_name}#{ext}")
+        TextMate.open(partial)
+        
 
       # Example: render :action => 'login'
       when /render[\s\(].*:action\s*=>\s*['"](.+?)['"]/
